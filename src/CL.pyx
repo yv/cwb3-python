@@ -141,7 +141,7 @@ cdef class AttStruc:
     return cl_cpos2struc(self.att,offset)
   def __getitem__(self,index):
     cdef int start, end
-    if index>=cl_max_struc(self.att):
+    if index<0 or index>=cl_max_struc(self.att):
        raise IndexError
     cl_struc2cpos(self.att,index,&start,&end)
     if self.has_values:
