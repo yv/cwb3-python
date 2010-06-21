@@ -48,7 +48,7 @@ cdef class Corpus:
     self.corpus=cl_new_corpus(registry,cname)
     self.name=cname
   def __repr__(self):
-      return "cwb.corpus('%s')"%(self.cname)
+      return "cwb.CL.Corpus('%s')"%(self.name)
   def __del__(self):
       cl_delete_corpus(self.corpus)
       self.corpus=NULL
@@ -90,9 +90,13 @@ cdef class PosAttrib:
   def __getitem__(self,offset):
     cdef int i
     if isinstance(offset,int):
+      if offset<0 or offset>=len(self):
+        raise IndexError('P-attribute offset out of bounds')
       return cl_cpos2str(self.att,offset)
     else:
       result=[]
+      if offset.start<0 or offset.stop<offset.start or offset.stop>=len(self):
+        raise IndexError('P-attribute offset out of bounds')
       for i from offset.start<=i<offset.stop:
         result.append(cl_cpos2str(self.att,i))
       return result
@@ -138,7 +142,11 @@ cdef class AttStruc:
   def find_pos(self,offset):
     return self[cl_cpos2struc(self.att,offset)]
   def cpos2struc(self,offset):
-    return cl_cpos2struc(self.att,offset)
+    cdef int val
+    val=cl_cpos2struc(self.att,offset)
+    if val==-8:
+      raise KeyError("no structure at this position")
+    return val
   def __getitem__(self,index):
     cdef int start, end
     if index<0 or index>=cl_max_struc(self.att):

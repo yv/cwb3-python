@@ -75,7 +75,7 @@ class CQP:
 		version_string = version_string.rstrip() # Equivalent to Perl's chomp
 		print >>sys.stderr, version_string,
 		version_regexp = re.compile(\
-		r'^CQP\s+(?:\w+\s+)*([0-9]+)\.([0-9]+)(?:\.b([0-9]+))?(?:\s+(.*))?$')
+		r'^CQP\s+(?:\w+\s+)*([0-9]+)\.([0-9]+)(?:\.b?([0-9]+))?(?:\s+(.*))?$')
 		match = version_regexp.match(version_string)
 		if not match:
 			print >> sys.stderr, "ERROR: CQP backend startup failed"
