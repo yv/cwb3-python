@@ -1,0 +1,21 @@
+This is a Python wrapper to the low-level API of CQP which allows
+you to access CQP corpora in the same way as Perl's CWB::CL
+
+To give you an idea how this works, see the following sample:
+
+--- 8< ---
+from CWB.CL import Corpus
+
+# open the corpus
+corpus=Corpus('TUEPP')
+# get sentences and words
+sentences=corpus.attribute('s','s')
+words=corpus.attribute('word','p')
+postags=corpus.attribute('pos','p')
+# retrieve offsets of the 1235th sentence (0-based)
+s_1234=sentences[1234]
+
+for w,p in zip(words[s_1234[0]:s_1234[1]+1],postags[s_1234[0]:s_1234[1]+1]):
+    print "%s/%s"%(w,p)
+
+--- 8< ---
