@@ -138,7 +138,7 @@ cdef class PosAttrib:
       return cl_cpos2str(self.att,offset)
     else:
       result=[]
-      if offset.start<0 or offset.stop<offset.start or offset.stop>=len(self):
+      if offset.start<0 or offset.stop<offset.start or offset.stop>len(self):
         raise IndexError('P-attribute offset out of bounds')
       for i from offset.start<=i<offset.stop:
         result.append(cl_cpos2str(self.att,i))
