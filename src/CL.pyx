@@ -60,7 +60,7 @@ cdef class Corpus:
     self.name=cname
   def __repr__(self):
       return "cwb.CL.Corpus('%s')"%(self.name)
-  def __del__(self):
+  def __dealloc__(self):
       cl_delete_corpus(self.corpus)
       self.corpus=NULL
   def attribute(self, name, atype):
@@ -109,7 +109,7 @@ cdef class IDList:
     r.length=k
     r.ids=result
     return r
-  def __del__(self):
+  def __dealloc__(self):
     free(self.ids)
 
 cdef class AttrDictionary
