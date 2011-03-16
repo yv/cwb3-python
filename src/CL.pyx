@@ -9,7 +9,9 @@ cdef extern from "cwb/cl.h":
   int ATT_NONE
   int ATT_POS
   int ATT_STRUC
+  int ATT_ALIGN
   int CDA_ESTRUC
+  int CDA_EALIGN
   char *cdperror_string(int error_num)
   union c_Attribute "_Attribute"
   struct c_Corpus "TCorpus":
@@ -32,6 +34,11 @@ cdef extern from "cwb/cl.h":
   bint cl_struc_values(c_Attribute *attribute)
   int *cl_id2cpos(c_Attribute *attribute, int tagid, int *result_len)
   int cl_id2freq(c_Attribute *attribute, int tagid)
+  int cl_max_alg(c_Attribute *attribute)
+  int cl_cpos2alg(c_Attribute *attribute, int cpos)
+  int cl_alg2cpos(c_Attribute *attribute, int alg,
+                  int *source_start, int *source_end,
+                  int *target_start, int *target_end)
   int *collect_matching_ids(c_Attribute *attribute, char *pattern,
                             int canonicalize, int *number_of_matches)
   int *cl_idlist2cpos(c_Attribute *attribute,
@@ -48,6 +55,7 @@ registry="/usr/local/share/cwb/registry/"
 
 cdef class PosAttrib
 cdef class AttStruc
+cdef class AlignAttrib
 
 # TBD:
 # list_corpora => gives a list of all corpora
@@ -68,6 +76,8 @@ cdef class Corpus:
       return AttStruc(self,name)
     elif atype=='p':
       return PosAttrib(self,name)
+    elif atype=='a':
+      return AlignAttrib(self,name)
 
 cdef class IDList:
   cdef int *ids
@@ -196,7 +206,7 @@ cdef class AttStruc:
   cdef Corpus parent
   cdef object attname
   def __repr__(self):
-    return "cwb.AttrStruct(%s,'%s')"%(self.parent,self.attname)
+    return "CWB.CL.AttrStruct(%s,'%s')"%(self.parent,self.attname)
   def __cinit__(self,Corpus parent,attname):
     self.parent=parent
     self.att=cl_new_attribute(parent.corpus,attname,ATT_STRUC)
@@ -252,6 +262,40 @@ cdef class AttStruc:
       return (start,end)
   def __len__(self):
     return cl_max_struc(self.att)
+
+cdef class AlignAttrib:
+  cdef c_Attribute *att
+  cdef bint has_values
+  cdef Corpus parent
+  cdef object attname
+  def __repr__(self):
+    return "CWB.CL.AlignAttrib(%s,'%s')"%(self.parent,self.attname)
+  def __cinit__(self,Corpus parent,attname):
+    self.parent=parent
+    self.att=cl_new_attribute(parent.corpus,attname,ATT_ALIGN)
+    if self.att==NULL:
+      raise KeyError
+    self.has_values=cl_struc_values(self.att)
+    self.attname=attname
+  def getName(self):
+    return self.attname
+  def cpos2alg(self,cpos):
+    cdef int val
+    val=cl_cpos2alg(self.att,cpos)
+    if val==CDA_EALIGN:
+      raise KeyError("no alignment at this position")
+    return val
+  def __getitem__(self,index):
+    cdef int start_a,end_a,start_b,end_b
+    if index<0 or index>=cl_max_alg(self.att):
+      raise IndexError
+    cl_alg2cpos(self.att,index,
+                &start_a,&end_a,
+                &start_b,&end_b)
+    return (start_a,end_a,start_b,end_b)
+  def __len__(self):
+    return cl_max_alg(self.att)
+  
 
 def test():
     cdef Corpus corpus
