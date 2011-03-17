@@ -23,6 +23,7 @@ cdef extern from "cwb/cl.h":
   char *cl_corpus_charset(c_Corpus *corpus)
   void cl_delete_corpus(c_Corpus *corpus)
   char *cl_cpos2str(c_Attribute *attribute, int position)
+  int cl_cpos2id(c_Attribute *attribute, int position)
   char *cl_struc2str(c_Attribute *attribute, int position)
   bint cl_struc2cpos(c_Attribute *attribute, int position,
                      int *start, int *end)
@@ -91,6 +92,23 @@ cdef class IDList:
     if i<0 or i>=self.length:
       raise IndexError
     return self.ids[i]
+  def __contains__(self,v):
+    cdef int lo,hi,mid,val
+    lo=0
+    hi=self.length
+    while hi-lo>1:
+      mid=(hi+lo)/2
+      val=self.ids[mid]
+      if val==v:
+        return True
+      elif val<v:
+        lo=mid+1
+      else:
+        hi=mid
+    if lo<hi:
+      return self.ids[lo]==v
+    else:
+      return False
   cpdef IDList join(self, IDList other, int offset):
     cdef int *result
     cdef int k1, k2, k
@@ -153,6 +171,8 @@ cdef class PosAttrib:
       for i from offset.start<=i<offset.stop:
         result.append(cl_cpos2str(self.att,i))
       return result
+  cpdef cpos2id(self,int offset):
+    return cl_cpos2id(self.att,offset)
   def find(self,tag):
     cdef int tagid
     cdef IDList lst
