@@ -83,9 +83,23 @@ cdef class Corpus:
 cdef class IDList:
   cdef int *ids
   cdef int length
-  def __cinit__(self):
-    self.ids=NULL
-    self.length=0
+  def __cinit__(self, seq=None):
+    cdef int i, old_val, is_sorted
+    if seq is None:
+      self.ids=NULL
+      self.length=0
+    else:
+      self.length=len(seq)
+      self.ids=<int *>malloc(self.length*sizeof(int))
+      old_val=-1
+      is_sorted=True
+      for i from 0<=i<self.length:
+        if seq[i]<old_val:
+          is_sorted=False
+          break
+        old_val=seq[i]
+        self.ids[i]=seq[i]
+      assert is_sorted
   def __len__(self):
     return self.length
   def __getitem__(self,i):
@@ -109,6 +123,76 @@ cdef class IDList:
       return self.ids[lo]==v
     else:
       return False
+  def __and__(IDList self, IDList other):
+    return self.join(other,0)
+  def __or__(IDList self, IDList other):
+    cdef int *result
+    cdef int k1, k2, k
+    cdef int val1, val2
+    cdef IDList r
+    # allocate once, using a conservative estimate on
+    # how big the result list is
+    result=<int *>malloc((self.length+other.length)*sizeof(int))
+    k1=k2=k=0
+    while k1<self.length and k2<other.length:
+      val1=self.ids[k1]
+      val2=other.ids[k2]
+      if val1<val2:
+        result[k]=val1
+        k+=1
+        k1+=1
+      elif val2<val1:
+        result[k]=val2
+        k+=1
+        k2+=1
+      else:
+        result[k]=val1
+        k+=1
+        k1+=1
+        k2+=1
+    while k1<self.length:
+      val1=self.ids[k1]
+      result[k]=val1
+      k+=1
+      k1+=1
+    while k2<other.length:
+      val2=other.ids[k2]
+      result[k]=val2
+      k+=1
+      k2+=1
+    r=IDList()
+    r.length=k
+    r.ids=result
+    return r
+  def __sub__(IDList self, IDList other):
+    cdef int *result
+    cdef int k1, k2, k
+    cdef int val1, val2
+    cdef IDList r
+    # allocate once, using a conservative estimate on
+    # how big the result list is
+    result=<int *>malloc(self.length*sizeof(int))
+    k1=k2=k=0
+    while k1<self.length and k2<other.length:
+      val1=self.ids[k1]
+      val2=other.ids[k2]
+      if val1<val2:
+        result[k]=val1
+        k+=1
+        k1+=1
+      elif val2<val1:
+        k2+=1
+      else:
+        k1+=1
+        k2+=1
+    while k1<self.length:
+      result[k]=self.ids[k1]
+      k+=1
+      k1+=1
+    r=IDList()
+    r.length=k
+    r.ids=result
+    return r    
   cpdef IDList join(self, IDList other, int offset):
     cdef int *result
     cdef int k1, k2, k
@@ -132,7 +216,7 @@ cdef class IDList:
         result[k]=val1
         k+=1
         k1+=1
-        k2+=2
+        k2+=1
     r=IDList()
     r.length=k
     r.ids=result
@@ -182,6 +266,19 @@ cdef class PosAttrib:
     lst=IDList()
     lst.ids=cl_id2cpos(self.att,tagid,&lst.length)
     return lst
+  def find_list(self, tags):
+    cdef int tagid
+    cdef IDList lst, lst_result
+    ids_set=set()
+    for tag in tags:
+      tagid=cl_str2id(self.att,tag)
+      if tagid<0:
+        continue
+      ids_set.add(tagid)
+    lst=IDList(sorted(ids_set))
+    lst_result=IDList()
+    lst_result.ids=cl_idlist2cpos(self.att, lst.ids, lst.length, 1, &lst_result.length)
+    return lst_result
   def frequency(self, tag):
     cdef int tagid
     tagid=cl_str2id(self.att,tag)
