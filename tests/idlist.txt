@@ -1,0 +1,21 @@
+IDList is a simple, sorted-array representation of integer sets, that is
+central to some parts of cwb-python.
+
+>>> from CWB.CL import IDList
+>>> a1=IDList(range(3)+range(4,10,2))
+>>> b1=IDList(range(3)+range(5,10,2))
+>>> c1=IDList(range(3)+range(4,10))
+>>> list(a1)
+[0, 1, 2, 4, 6, 8]
+>>> list(b1)
+[0, 1, 2, 5, 7, 9]
+>>> list(a1|b1)
+[0, 1, 2, 4, 5, 6, 7, 8, 9]
+>>> list(a1&b1)
+[0, 1, 2]
+>>> list(a1-b1)
+[4, 6, 8]
+>>> list((a1|b1)-b1)
+[4, 6, 8]
+>>> list((a1|b1)-(b1&a1))
+[4, 5, 6, 7, 8, 9]
