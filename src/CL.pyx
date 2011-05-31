@@ -1,3 +1,5 @@
+import codecs
+
 cdef extern from "stdlib.h":
   void *malloc(int size)
   void free(void *)
@@ -31,6 +33,7 @@ cdef extern from "cwb/cl.h":
   char *cl_id2str(c_Attribute *attribute, int id)
   int cl_cpos2struc(c_Attribute *attribute, int offset)
   int cl_max_struc(c_Attribute *attribute)
+  int cl_max_id(c_Attribute *attribute)
   int cl_max_cpos(c_Attribute *attribute)
   bint cl_struc_values(c_Attribute *attribute)
   int *cl_id2cpos(c_Attribute *attribute, int tagid, int *result_len)
@@ -64,9 +67,23 @@ cdef class AlignAttrib
 cdef class Corpus:
   cdef c_Corpus *corpus
   cdef object name
-  def __cinit__(self,cname):
+  cdef object charset_decoder
+  cdef object charset_encoder
+  def __cinit__(self, cname, encoding='ISO-8859-15'):
     self.corpus=cl_new_corpus(registry,cname)
     self.name=cname
+    self.charset_decoder=codecs.getdecoder(encoding)
+    self.charset_encoder=codecs.getencoder(encoding)
+  cpdef bytes to_str(self, s):
+    if isinstance(s,unicode):
+      return self.charset_encoder(s)[0]
+    else:
+      return s
+  cpdef unicode to_unicode(self, s):
+    if isinstance(s,unicode):
+      return s
+    else:
+      return self.charset_decoder(s)[0]
   def __repr__(self):
       return "cwb.CL.Corpus('%s')"%(self.name)
   def __dealloc__(self):
@@ -260,7 +277,8 @@ cdef class PosAttrib:
   def find(self,tag):
     cdef int tagid
     cdef IDList lst
-    tagid=cl_str2id(self.att,tag)
+    cdef object tag_s=self.parent.to_str(tag)
+    tagid=cl_str2id(self.att,tag_s)
     if tagid<0:
       raise KeyError
     lst=IDList()
@@ -268,10 +286,12 @@ cdef class PosAttrib:
     return lst
   def find_list(self, tags):
     cdef int tagid
+    cdef bytes tag_s
     cdef IDList lst, lst_result
     ids_set=set()
     for tag in tags:
-      tagid=cl_str2id(self.att,tag)
+      tag_s=self.parent.to_str(tag)
+      tagid=cl_str2id(self.att,tag_s)
       if tagid<0:
         continue
       ids_set.add(tagid)
@@ -279,9 +299,17 @@ cdef class PosAttrib:
     lst_result=IDList()
     lst_result.ids=cl_idlist2cpos(self.att, lst.ids, lst.length, 1, &lst_result.length)
     return lst_result
+  def find_pattern(self, pat, flags=0):
+    cdef IDList lst, lst_result
+    cdef bytes pat_s=self.parent.to_str(pat)
+    lst=IDList()
+    lst.ids=collect_matching_ids(self.att, pat_s, flags, &lst.length)
+    lst_result=IDList()
+    lst_result.ids=cl_idlist2cpos(self.att, lst.ids, lst.length, 1, &lst_result.length)
+    return lst_result
   def frequency(self, tag):
-    cdef int tagid
-    tagid=cl_str2id(self.att,tag)
+    cdef bytes tag_s=self.parent.to_str(tag)
+    cdef int tagid=cl_str2id(self.att,tag_s)
     if tagid<0:
       raise KeyError(cdperror_string(tagid))
     return cl_id2freq(self.att,tagid)
@@ -292,6 +320,8 @@ cdef class AttrDictionary:
   cdef PosAttrib attr
   def __cinit__(self,d):
     self.attr=d
+  def __len__(self):
+    return cl_max_id(self.attr.att)
   def __getitem__(self,s):
     cdef int val
     val=cl_str2id(self.attr.att,s)
