@@ -69,8 +69,12 @@ cdef class Corpus:
   cdef object name
   cdef object charset_decoder
   cdef object charset_encoder
-  def __cinit__(self, cname, encoding='ISO-8859-15'):
-    self.corpus=cl_new_corpus(registry,cname)
+  def __cinit__(self, cname, encoding='ISO-8859-15', registry_dir=None):
+    if registry_dir is None:
+      registry_dir=registry
+    self.corpus=cl_new_corpus(registry_dir,cname)
+    if self.corpus==NULL:
+      raise KeyError(cname)
     self.name=cname
     self.charset_decoder=codecs.getdecoder(encoding)
     self.charset_encoder=codecs.getencoder(encoding)
@@ -87,8 +91,9 @@ cdef class Corpus:
   def __repr__(self):
       return "cwb.CL.Corpus('%s')"%(self.name)
   def __dealloc__(self):
+    if self.corpus!=NULL:
       cl_delete_corpus(self.corpus)
-      self.corpus=NULL
+    self.corpus=NULL
   def attribute(self, name, atype):
     if atype=='s':
       return AttStruc(self,name)
@@ -113,10 +118,9 @@ cdef class IDList:
       for i from 0<=i<self.length:
         if seq[i]<old_val:
           is_sorted=False
-          break
         old_val=seq[i]
         self.ids[i]=seq[i]
-      assert is_sorted
+      assert sorted
   def __len__(self):
     return self.length
   def __getitem__(self,i):

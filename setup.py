@@ -15,7 +15,8 @@ try:
         if newer(fname,out_fname):
             print >>sys.stderr, "Cython %s => %s"%(fname,out_fname)
             options=CompilationOptions(pyrex_default_options,
-                                       output_file=out_fname)
+                                       output_file=out_fname,
+                                       cplus=True)
             result=cython_compile(fname,options)
             if result.num_errors!=0:
                 raise ValueError,'Compilation failed!'

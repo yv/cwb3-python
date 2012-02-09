@@ -1,3 +1,5 @@
+#include "cmph.h"
+
 cdef class CMPH:
   def __init__(self,fname):
       cdef FILE *f=fopen(fname,"rb")
