@@ -48,6 +48,10 @@ class build_ext(_build_ext):
 def replace_suffix(path, new_suffix):
     return os.path.splitext(path)[0] + new_suffix
 
+# for CWB 2.2
+extra_libs=[]
+# for CWB >= 3.0
+#extra_libs=['pcre','glib-2.0']
 
 setup(name='cwb-python',
       description='CQP and CL interfaces for Python',
@@ -55,9 +59,10 @@ setup(name='cwb-python',
       version='0.1',
       cmdclass={'build_ext':build_ext},
       ext_modules=[Extension('CWB.CL',['src/CL.pyx'],
-                             libraries=['cl']),
-                   Extension('cmph',['src/cmph.pyx'],
-                             libraries=['cmph'])
+                             libraries=['cl']+extra_libs),
+#                   Extension('cmph',['src/cmph.pyx'],
+#                             libraries=['cmph'])
                    ],
       py_modules=['PyCQP_interface'],
-      packages=['CWB'])
+      packages=['CWB'],
+      package_dir={'':'py_src'})
