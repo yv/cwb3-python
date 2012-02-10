@@ -27,3 +27,8 @@ for w,p in zip(words[s_1234[0]:s_1234[1]+1],postags[s_1234[0]:s_1234[1]+1]):
     print "%s/%s"%(w,p)
 
 --- 8< ---
+
+In order to test the CWB.CL module's correct installation
+independently of any CQP corpora, you can do a
+ python -m doctest tests/idlist.txt
+which should terminate with no output when everything is well.
