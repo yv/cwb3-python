@@ -1,58 +1,5 @@
 import codecs
 
-cdef extern from "stdlib.h":
-  void *malloc(int size)
-  void free(void *)
-
-cdef extern from "string.h":
-  int strcmp(char *, char *)
-
-cdef extern from "cwb/cl.h":
-  int ATT_NONE
-  int ATT_POS
-  int ATT_STRUC
-  int ATT_ALIGN
-  int CDA_ESTRUC
-  int CDA_EALIGN
-  char *cdperror_string(int error_num)
-  union c_Attribute "_Attribute"
-  struct c_Corpus "TCorpus":
-    pass
-  c_Attribute *cl_new_attribute(c_Corpus *corpus,
-                               char *attribute_name,
-                               int type)
-  c_Corpus *cl_new_corpus(char *registry_dir, char *registry_name)
-  char *cl_corpus_charset(c_Corpus *corpus)
-  void cl_delete_corpus(c_Corpus *corpus)
-  char *cl_cpos2str(c_Attribute *attribute, int position)
-  int cl_cpos2id(c_Attribute *attribute, int position)
-  char *cl_struc2str(c_Attribute *attribute, int position)
-  bint cl_struc2cpos(c_Attribute *attribute, int position,
-                     int *start, int *end)
-  int cl_str2id(c_Attribute *attribute, char *str)
-  char *cl_id2str(c_Attribute *attribute, int id)
-  int cl_cpos2struc(c_Attribute *attribute, int offset)
-  int cl_max_struc(c_Attribute *attribute)
-  int cl_max_id(c_Attribute *attribute)
-  int cl_max_cpos(c_Attribute *attribute)
-  bint cl_struc_values(c_Attribute *attribute)
-  int *cl_id2cpos(c_Attribute *attribute, int tagid, int *result_len)
-  int cl_id2freq(c_Attribute *attribute, int tagid)
-  int cl_max_alg(c_Attribute *attribute)
-  int cl_cpos2alg(c_Attribute *attribute, int cpos)
-  int cl_alg2cpos(c_Attribute *attribute, int alg,
-                  int *source_start, int *source_end,
-                  int *target_start, int *target_end)
-  int *collect_matching_ids(c_Attribute *attribute, char *pattern,
-                            int canonicalize, int *number_of_matches)
-  int *cl_idlist2cpos(c_Attribute *attribute,
-                      int *ids, int number_of_ids,
-                      int sort,
-                      int *size_of_table)
-  int get_struc_attribute(c_Attribute *attribute, int cpos, int *s_start, int *s_end)
-  int get_num_of_struc(c_Attribute *attribute, int cpos, int *s_num)
-  int get_bounds_of_nth_struc(c_Attribute *attribute, int struc_num, int *s_start, int *s_end)
-
 cdef public object registry
 
 registry="/usr/local/share/cwb/registry/"
@@ -65,10 +12,6 @@ cdef class AlignAttrib
 # list_corpora => gives a list of all corpora
 
 cdef class Corpus:
-  cdef c_Corpus *corpus
-  cdef object name
-  cdef object charset_decoder
-  cdef object charset_encoder
   def __cinit__(self, cname, encoding='ISO-8859-15', registry_dir=None):
     if registry_dir is None:
       registry_dir=registry
@@ -103,8 +46,6 @@ cdef class Corpus:
       return AlignAttrib(self,name)
 
 cdef class IDList:
-  cdef int *ids
-  cdef int length
   def __cinit__(self, seq=None):
     cdef int i, old_val, is_sorted
     if seq is None:
@@ -243,14 +184,12 @@ cdef class IDList:
     r.ids=result
     return r
   def __dealloc__(self):
-    free(self.ids)
+    if self.ids!=NULL:
+      free(self.ids)
 
 cdef class AttrDictionary
 
 cdef class PosAttrib:
-  cdef c_Attribute *att
-  cdef Corpus parent
-  cdef object attname
   def __repr__(self):
     return "cwb.Attribute(%s,'%s')"%(self.parent,self.attname)
   def __cinit__(self,Corpus parent,attname):
@@ -352,10 +291,6 @@ cdef class AttrDictionary:
     return result
 
 cdef class AttStruc:
-  cdef c_Attribute *att
-  cdef bint has_values
-  cdef Corpus parent
-  cdef object attname
   def __repr__(self):
     return "CWB.CL.AttrStruct(%s,'%s')"%(self.parent,self.attname)
   def __cinit__(self,Corpus parent,attname):
@@ -386,7 +321,7 @@ cdef class AttStruc:
     if val==CDA_ESTRUC:
       raise KeyError("no structure at this position")
     return val
-  def map_idlist(self, IDList lst):
+  def map_idlist(self, IDList lst not None):
     """returns an IDList with (unique) struc offsets instead of
        corpus positions"""
     cdef IDList result=IDList()
@@ -415,10 +350,6 @@ cdef class AttStruc:
     return cl_max_struc(self.att)
 
 cdef class AlignAttrib:
-  cdef c_Attribute *att
-  cdef bint has_values
-  cdef Corpus parent
-  cdef object attname
   def __repr__(self):
     return "CWB.CL.AlignAttrib(%s,'%s')"%(self.parent,self.attname)
   def __cinit__(self,Corpus parent,attname):
@@ -454,9 +385,7 @@ def test():
     cdef int i
     corpus=Corpus("FEMME")
     print repr(corpus)
-    print corpus.get_P_attributes()
-    print corpus.get_S_attributes()
-    attr=corpus["word"]
+    attr=corpus.attribute("word",'p')
     print attr[0:4]
     attr2=AttStruc(corpus,"s")
     print len(attr2), attr2[23]
