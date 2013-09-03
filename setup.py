@@ -53,6 +53,9 @@ extra_libs=[]
 # for CWB >= 3.0
 #extra_libs=['pcre','glib-2.0']
 
+def read(fname):
+    return file(fname).read()
+
 setup(name='cwb-python',
       description='CQP and CL interfaces for Python',
       author='Yannick Versley / Jorg Asmussen',
@@ -66,5 +69,5 @@ setup(name='cwb-python',
                    ],
       py_modules=['PyCQP_interface'],
       packages=['CWB'],
-      long_description=read('README')
+      long_description=read('README'),
       package_dir={'':'py_src'})
