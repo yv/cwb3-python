@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext as _build_ext
+try:
+    from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+    # 2.x
+    from distutils.command.build_py import build_py
 from distutils.dep_util import newer
 import sys
 import os.path
@@ -54,13 +59,14 @@ extra_libs=[]
 #extra_libs=['pcre','glib-2.0']
 
 def read(fname):
-    return file(fname).read()
+    return open(fname).read()
 
 setup(name='cwb-python',
       description='CQP and CL interfaces for Python',
       author='Yannick Versley / Jorg Asmussen',
       version='0.1a',
 #      cmdclass={'build_ext':build_ext},
+      cmdclass={'build_py':build_py},
       ext_modules=[Extension('CWB.CL',['src/CWB/CL.cpp'],
                              include_dirs=['src'],
                              libraries=['cl']+extra_libs),

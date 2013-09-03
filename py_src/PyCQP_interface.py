@@ -43,7 +43,7 @@ class CQP:
 		self.runController = True
 		while self.runController:
 			time.sleep(cProgressControlCycle)
-			if self.execStart <> None:
+			if self.execStart != None:
 				if time.time() - self.execStart > \
 				cMaxRequestProcTime * self.maxProcCycles:
 					print >>sys.stderr,"    WARNING!: PROGRESS CONTROLLER",
