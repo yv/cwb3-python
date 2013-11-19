@@ -12,13 +12,15 @@ cdef class AlignAttrib
 # list_corpora => gives a list of all corpora
 
 cdef class Corpus:
-  def __cinit__(self, cname, encoding='ISO-8859-15', registry_dir=None):
+  def __cinit__(self, cname, encoding=None, registry_dir=None):
     if registry_dir is None:
       registry_dir=registry
     self.corpus=cl_new_corpus(registry_dir,cname)
     if self.corpus==NULL:
       raise KeyError(cname)
     self.name=cname
+    if encoding is None:
+      encoding=self.get_encoding()
     self.charset_decoder=codecs.getdecoder(encoding)
     self.charset_encoder=codecs.getencoder(encoding)
   cpdef bytes to_str(self, s):
@@ -26,6 +28,12 @@ cdef class Corpus:
       return self.charset_encoder(s)[0]
     else:
       return s
+  def get_encoding(self):
+    cdef const char *s
+    cdef CorpusCharset cset
+    cset=cl_corpus_charset(self.corpus)
+    s=cl_charset_name(cset)
+    return s
   cpdef unicode to_unicode(self, s):
     if isinstance(s,unicode):
       return s
