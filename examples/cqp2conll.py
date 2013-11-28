@@ -2,6 +2,14 @@ import sys
 import optparse
 from CWB.CL import Corpus
 
+try:
+    from pcfg_site_config import get_config_var
+    CQP_REGISTRY=get_config_var('pycwb.cqp_registry')
+except ImportError:
+    CQP_REGISTRY=None
+except KeyError:
+    CQP_REGISTRY=None
+
 __doc__='''
 this module is suitable for converting CQP corpora into
 CoNLL(-09) format with some empty columns. This allows
@@ -53,7 +61,7 @@ def main(argv=None):
         sent_start=0
         sent_end=None
     columns=[None]*14
-    corpus=Corpus(corpus_name)
+    corpus=Corpus(corpus_name, registry_dir=CQP_REGISTRY)
     columns[0]=corpus.attribute('word','p')
     sent_attr=corpus.attribute('s','s')
     if opts.fmt=='conll':
