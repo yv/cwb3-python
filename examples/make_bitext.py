@@ -4,10 +4,19 @@ import codecs
 from CWB.CL import Corpus
 from gzip import GzipFile
 
+try:
+    from pcfg_site_config import get_config_var
+    CQP_REGISTRY=get_config_var('pycwb.cqp_registry')
+except ImportError:
+    CQP_REGISTRY=None
+except KeyError:
+    CQP_REGISTRY=None
+
+
 class CorpusInfo:
     def __init__(self, corpus_name):
         self.name=corpus_name
-        self.corpus=Corpus(corpus_name)
+        self.corpus=Corpus(corpus_name, registry_dir=CQP_REGISTRY)
         self.words=self.corpus.attribute('word','p')
         self.sentences=self.corpus.attribute('s','s')
         id_to_start={}
