@@ -32,6 +32,7 @@ def parse_xml(fname, corpus1, corpus2, reverse=False,
         print "%s\ts\t%s\ts"%(corpus2.name,corpus1.name)
     offset1=offset2=-1
     lst=[]
+    last_alg=-1
     for (ev,elem) in etree.iterparse(f, events=('start','end')):
         if elem.tag=='link':
             if ev=='end':
@@ -75,7 +76,7 @@ def parse_xml(fname, corpus1, corpus2, reverse=False,
                     len(tgt2)==1):
                     if not reverse:
                         print >>f_dump, "%s\t%s"%(corpus1.sentences[tgt1[0]][0],
-                                                  corpus1.sentences[tgt2[0]][1])
+                                                  corpus1.sentences[tgt1[0]][1])
                     else:
                         print >>f_dump, "%s\t%s"%(corpus2.sentences[tgt2[0]][0],
                                                   corpus2.sentences[tgt2[0]][1])
@@ -83,19 +84,28 @@ def parse_xml(fname, corpus1, corpus2, reverse=False,
             if ev=='start':
                 offset1=corpus1[elem.attrib['fromDoc']]
                 offset2=corpus2[elem.attrib['toDoc']]
-                print >>sys.stderr, offset1, offset2
+                print >>sys.stderr, "\r%d %s"%(offset1, offset2),
                 if lst:
                     if reverse:
                         lst.sort()
                     for tup in lst:
+                        if last_alg>=tup[0]:
+                            print >>sys.stderr, "Duplicate alignment: %s %s"%(last_alg,tup)
+                            continue
                         print "%s\t%s\t%s\t%s"%tup
+                        last_alg=tup[1]
                     lst=[]
     f.close()
     if lst:
         if reverse:
             lst.sort()
         for tup in lst:
+            if last_alg>=tup[0]:
+                print >>sys.stderr, "Duplicate alignment: %s %s"%(last_alg,tup)
+                continue
             print "%s\t%s\t%s\t%s"%tup
+            last_alg=tup[1]
+    print >>sys.stderr, "\ndone."
 
 oparse=optparse.OptionParser()
 oparse.add_option('--reverse', dest='reverse',
