@@ -33,7 +33,7 @@ def output_sentences(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None):
             print '\t'.join(line)
         print
 
-def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None, corpus_name='corpus'):
+def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None):
     if sent_end is None:
         sent_end=len(sent_attr)
     if f_out is None:
@@ -44,7 +44,7 @@ def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=N
         print >>f_out,' '.join(line)
 
 def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
-                           f_out=None):
+                           f_out=None, corpus_name='corpus'):
     if sent_end is None:
         sent_end=len(sent_attr)
     if f_out is None:
