@@ -44,13 +44,15 @@ def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=N
         print >>f_out,' '.join(line)
 
 def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
-                           f_out=None, corpus_name='corpus'):
+                           f_out=None, corpus_name='corpus', max_len=None):
     if sent_end is None:
         sent_end=len(sent_attr)
     if f_out is None:
         f_out=sys.stdout
     for sent_no in xrange(sent_start, sent_end):
         (off_start, off_end)=sent_attr[sent_no][:2]
+        if max_len is not None and off_end-off_start >= max_len:
+            continue
         line=attrs[0][off_start:off_end+1]
         print >>f_out,'<s %s_%d> %s </s>'%(corpus_name,sent_no,' '.join(line))
 
@@ -58,6 +60,7 @@ oparse=optparse.OptionParser()
 oparse.add_option('--fmt', dest='fmt',
                   default='conll',
                   choices=['conll','line','bllip'])
+oparse.add_option('-l', '--max-length', dest='maxlen')
 
 
 def main(argv=None):
@@ -82,7 +85,7 @@ def main(argv=None):
         output_sentences_line(sent_attr, columns, sent_start, sent_end)
     elif opts.fmt=='bllip':
         output_sentences_bllip(sent_attr, columns, sent_start, sent_end,
-                               corpus_name=corpus_name)
+                               corpus_name=corpus_name, max_len=opts.max_len)
 
 if __name__=='__main__':
     main()
