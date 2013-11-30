@@ -33,7 +33,7 @@ def output_sentences(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None):
             print '\t'.join(line)
         print
 
-def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None):
+def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None, corpus_name='corpus'):
     if sent_end is None:
         sent_end=len(sent_attr)
     if f_out is None:
@@ -43,9 +43,21 @@ def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=N
         line=attrs[0][off_start:off_end+1]
         print >>f_out,' '.join(line)
 
+def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
+                           f_out=None):
+    if sent_end is None:
+        sent_end=len(sent_attr)
+    if f_out is None:
+        f_out=sys.stdout
+    for sent_no in xrange(sent_start, sent_end):
+        (off_start, off_end)=sent_attr[sent_no][:2]
+        line=attrs[0][off_start:off_end+1]
+        print >>f_out,'<s %s_%d> %s </s>'%(corpus_name,sent_no,' '.join(line))
+
 oparse=optparse.OptionParser()
 oparse.add_option('--fmt', dest='fmt',
-                  default='conll')
+                  default='conll',
+                  choices=['conll','line','bllip')
 
 
 def main(argv=None):
@@ -68,6 +80,9 @@ def main(argv=None):
         output_sentences(sent_attr, columns, sent_start, sent_end)
     elif opts.fmt=='line':
         output_sentences_line(sent_attr, columns, sent_start, sent_end)
+    elif opts.fmt=='bllip':
+        output_sentences_bllip(sent_attr, columns, sent_start, sent_end,
+                               corpus_name=corpus_name)
 
 if __name__=='__main__':
     main()
