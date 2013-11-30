@@ -60,7 +60,7 @@ oparse=optparse.OptionParser()
 oparse.add_option('--fmt', dest='fmt',
                   default='conll',
                   choices=['conll','line','bllip'])
-oparse.add_option('-l', '--max-length', dest='maxlen')
+oparse.add_option('-l', '--max-length', dest='max_len')
 
 
 def main(argv=None):
