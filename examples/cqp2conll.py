@@ -57,7 +57,7 @@ def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
 oparse=optparse.OptionParser()
 oparse.add_option('--fmt', dest='fmt',
                   default='conll',
-                  choices=['conll','line','bllip')
+                  choices=['conll','line','bllip'])
 
 
 def main(argv=None):
