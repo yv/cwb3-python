@@ -1,3 +1,4 @@
+import sys
 import optparse
 from CWB.CL import Corpus
 from collections import defaultdict
@@ -14,25 +15,26 @@ oparse.add_option('-O','--output',
                   dest='out_fname',
                   default=None)
 oparse.add_option('--encoding',
-                  dest='encoding',
-                  default='UTF-8')
+                  dest='encoding')
 
 def cqp2vocab_main(argv=None):
     opts,args=oparse.parse_args(argv)
     frequencies=defaultdict(int)
     for arg in args:
         crp=Corpus(arg)
-        att=crp.attribute(opts.attr)
-        if crp.get_encoding()!=opts.encoding:
+        att=crp.attribute(opts.attr,'p')
+        if opts.encoding is not None and crp.get_encoding()!=opts.encoding:
             print >>sys.stderr, "Recoding %s items from %s to %s"%(
                 arg, crp.get_encoding(), opts.encoding)
             to_uni=crp.to_unicode
             enc=opts.encoding
             recode=lambda w: to_uni(w).encode(enc)
         else:
-            recode=id
-        for word in att.getDictionary():
-            frequencies[word]+=att.frequency(recode(word))
+            recode=lambda x: x
+        dic=att.getDictionary()
+        for i in xrange(len(dic)):
+            word=dic.get_word(i)
+            frequencies[recode(word)]+=att.frequency(word)
     for word in frequencies.keys():
         if frequencies[word]<opts.threshold:
             del frequencies[word]

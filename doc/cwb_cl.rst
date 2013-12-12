@@ -50,6 +50,15 @@ these corpus positions.
       attribute, wich contains string-to-number mapping and frequency
       information.
 
+   .. py:method:: get_encoding(self)
+
+      returns a string describing the encoding of the corpus
+      (based on the information in the CQP registry)
+
+   .. py:method:: to_unicode(self, s)
+
+      if s is a raw string, it will decoded to a Unicode object
+
    .. py:method:: __getitem__(self, offset)
 
       returns the attribute value at position *offset* as a string.
