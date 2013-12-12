@@ -1,21 +1,26 @@
 import sys
 import optparse
 import codecs
-from simplejson import json
+import simplejson as json
 from CWB.CL import Corpus
 from gzip import GzipFile
+from itertools import izip
 
-__doc__='''
+__doc__ = '''
 Tools to write a JSON-format aligned corpus
 (with original word forms and sentence ID hints)
 from the output of PostCAT or fast_align
+
+Test with:
+    export BNAME=~/scratch/Europarlv7/en-de/postcat_align/agreement/post-pts/inter/europarl7/en-de/model/aligned
+    python bitext2json.py --e=$BNAME.0.en --f=$BNAME.0.de --align=$BNAME.inter --eatt=mt_lemma --fatt=mt_lemma --maxlen=40 EP7_EN EP7_DE
 '''
 
 try:
     from pcfg_site_config import get_config_var
-    CQP_REGISTRY=get_config_var('pycwb.cqp_registry')
+    CQP_REGISTRY = get_config_var('pycwb.cqp_registry')
 except ImportError:
-    CQP_REGISTRY=None
+    CQP_REGISTRY = None
 except KeyError:
     CQP_REGISTRY=None
 
@@ -34,8 +39,8 @@ class CorpusInfo:
         return self.sentences.cpos2struc(self.id_to_start[fname])
 
 def get_alignments(corpus1, corpus2,
-                   att1='word', att2='word',
-                   max_len=None):
+        att1='word', att2='word',
+        max_len=None):
     att_align=corpus1.corpus.attribute(corpus2.name.lower(),'a')
     seq1=corpus1.corpus.attribute(att1,'p')
     seq2=corpus2.corpus.attribute(att2,'p')
@@ -43,18 +48,24 @@ def get_alignments(corpus1, corpus2,
     words2=corpus2.words
     sent=corpus1.sentences
     for start1, end1, start2, end2 in att_align:
-        if max_len is not None and (end1-start1>=max_len or
-                                    end2-start2>=max_len):
+        if (max_len is not None and
+                (end1-start1+1>=max_len or
+                 end2-start2+1>=max_len)):
             continue
-        yield {'seq1':seq1[start1:end1+1],
-               'seq2':seq2[start2:end2+1],
-               'words1':words1[start1:end1+1],
-               'words2':words2[start2:end2+1],
-               '_id':sent.cpos2struc(start1)}
+        else:
+            yield {'seq1':seq1[start1:end1+1],
+                    'seq2':seq2[start2:end2+1],
+                    'words1':words1[start1:end1+1],
+                    'words2':words2[start2:end2+1],
+                    '_id':sent.cpos2struc(start1)}
 
 def read_alignments(f_lang1, f_lang2, f_align):
     for l_align in f_align:
-        align=[map(int,x.split('-')) for x in l_align().strip().split()]
+        try:
+            align=[map(int, x.split('-')) for x in l_align.strip().split()]
+        except ValueError:
+            print >>sys.stderr, repr(l_align)
+            raise
         words1=f_lang1.readline().strip().split()
         words2=f_lang2.readline().strip().split()
         yield {'align':align,
@@ -69,8 +80,8 @@ def maybe_write(fname):
 
 def merge_alignments(seq1, seq2):
     for s1,s2 in izip(seq1, seq2):
-        assert s1['seq1']==s2['seq1']
-        assert s1['seq2']==s2['seq2']
+        assert s1['seq1']==s2['seq1'],(s1,s2,len(s2['seq1']),len(s2['seq2']))
+        assert s1['seq2']==s2['seq2'],(s1,s2)
         yield {'words1':s2['words1'],
                'words2':s2['words2'],
                'align':s1['align'],
@@ -89,8 +100,10 @@ oparse.add_option('--eatt', dest='attr_e',
                   default='word')
 oparse.add_option('--fatt', dest='attr_f',
                   default='word')
-oparse.add_option('--maxlen', dest='maxlen',
+oparse.add_option('--maxlen', dest='maxlen',type='int',
                   default=None)
+oparse.add_option('--name',dest='align_name',
+        default='bitext2json')
 def main(argv=None):
     (opts,args)=oparse.parse_args(argv)
     attnames=[]
@@ -107,8 +120,9 @@ def main(argv=None):
                         att1=opts.attr_e,
                         att2=opts.attr_f,
                         max_len=opts.maxlen)
+    alg_name=opts.align_name
     for json_obj in merge_alignments(seq1, seq2):
-        print >>f_json, json.dumps(json_obj)
+        print >>f_json, json.dumps({alg_name:json_obj)
 
 if __name__=='__main__':
     main()
