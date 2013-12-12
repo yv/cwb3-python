@@ -158,3 +158,27 @@ these corpus positions.
       by *offset*. This can be used to find sequences of one word
       following another, or of one sentence containing a match for
       *X* and the next containing a match for *Y*.
+
+.. py:class:: AttrDictionary
+
+   An *AttrDictionary* corresponds to the set of values that an
+   attribute can take. It is useful to retrieve IDs or frequencies
+   for the possible values of that attribute.
+
+   .. py:method:: __len__(self)
+
+   returns the number of possible values. This and the ``__getitem``
+   method make it possible to iterate over the attribute dictionary.
+
+   .. py:method:: get_word(self, n)
+
+   returns the attribute value corresponding to the numeric ID *n*.
+
+   .. py:method:: get_matching(self, pat)
+
+   returns a :py:class:`IDList` containing the numerical IDs of
+   matching values.
+
+   .. py:method:: expand_pattern(self, pat, flags=0)
+
+   returns a list of strings for values matching the pattern.
