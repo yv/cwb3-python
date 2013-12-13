@@ -122,7 +122,7 @@ def main(argv=None):
                         max_len=opts.maxlen)
     alg_name=opts.align_name
     for json_obj in merge_alignments(seq1, seq2):
-        print >>f_json, json.dumps({alg_name:json_obj)
+        print >>f_json, json.dumps({alg_name:json_obj})
 
 if __name__=='__main__':
     main()

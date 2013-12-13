@@ -32,9 +32,12 @@ def conll2cqp_main(argv=None):
                 result.append(line[5])
                 result.append(line[3])
                 result.append(line[7])
-                parent_idx = int(line[9])
-                if parent_idx != 0:
-                    parent_idx -= line_idx
+                if line[9]=='_':
+                    parent_idx='_'
+                else:
+                    parent_idx = int(line[9])
+                    if parent_idx != 0:
+                        parent_idx -= line_idx
                 result.append(str(parent_idx))
                 result.append(line[11])
                 print '\t'.join(result)
@@ -42,6 +45,9 @@ def conll2cqp_main(argv=None):
                 if in_sent:
                     print "</s>"
                 in_sent = False
+        if in_sent:
+            print "</s>"
+            in_sent=False
 
 if __name__ == '__main__':
     conll2cqp_main()
