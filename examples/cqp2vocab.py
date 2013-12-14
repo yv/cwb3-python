@@ -3,6 +3,15 @@ import optparse
 from CWB.CL import Corpus
 from collections import defaultdict
 
+try:
+    from pcfg_site_config import get_config_var
+    CQP_REGISTRY = get_config_var('pycwb.cqp_registry')
+except ImportError:
+    CQP_REGISTRY = None
+except KeyError:
+    CQP_REGISTRY=None
+    
+
 oparse=optparse.OptionParser()
 oparse.add_option('--attr',
                   dest='attr',
@@ -21,7 +30,7 @@ def cqp2vocab_main(argv=None):
     opts,args=oparse.parse_args(argv)
     frequencies=defaultdict(int)
     for arg in args:
-        crp=Corpus(arg)
+        crp=Corpus(arg,registry_dir=CQP_REGISTRY)
         att=crp.attribute(opts.attr,'p')
         if opts.encoding is not None and crp.get_encoding()!=opts.encoding:
             print >>sys.stderr, "Recoding %s items from %s to %s"%(
