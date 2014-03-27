@@ -10,7 +10,6 @@ except ImportError:
     CQP_REGISTRY = None
 except KeyError:
     CQP_REGISTRY=None
-    
 
 oparse=optparse.OptionParser()
 oparse.add_option('--attr',

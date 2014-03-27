@@ -11,6 +11,10 @@ cdef class AlignAttrib
 # TBD:
 # list_corpora => gives a list of all corpora
 
+encoding_names={
+    'utf8':'UTF-8',
+    'latin1':'ISO-8859-15'}
+
 cdef class Corpus:
   def __cinit__(self, cname, encoding=None, registry_dir=None):
     if registry_dir is None:
@@ -33,7 +37,10 @@ cdef class Corpus:
     cdef CorpusCharset cset
     cset=cl_corpus_charset(self.corpus)
     s=cl_charset_name(cset)
-    return s
+    if s in encoding_names:
+        return encoding_names[s]
+    else:
+        return s
   cpdef unicode to_unicode(self, s):
     if isinstance(s,unicode):
       return s
@@ -162,7 +169,7 @@ cdef class IDList:
     r=IDList()
     r.length=k
     r.ids=result
-    return r    
+    return r
   cpdef IDList join(self, IDList other, int offset):
     cdef int *result
     cdef int k1, k2, k
@@ -385,7 +392,7 @@ cdef class AlignAttrib:
     return (start_a,end_a,start_b,end_b)
   def __len__(self):
     return cl_max_alg(self.att)
-  
+
 
 def test():
     cdef Corpus corpus

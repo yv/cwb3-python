@@ -113,6 +113,10 @@ these corpus positions.
       returns the start/end tuple for the structure
       spanning the corpus position *offset*.
 
+   .. py:method:: __getitem__(self, idx)
+
+      returns the start/end tuple for the *idx*'th structure
+
    .. py:method:: cpos2struc(self,offset)
 
       returns the structure number for the structure
