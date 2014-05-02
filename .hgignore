@@ -2,4 +2,5 @@
 ^dist/
 ^doc/_build/
 ^[^/]+\.egg
+\.egg-info
 ~$

@@ -66,19 +66,26 @@ def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
         print >>f_out, '<s %s_%d> %s </s>' % (corpus_name,
                                               sent_no, ' '.join(line))
 
-oparse = optparse.OptionParser()
+oparse = optparse.OptionParser(usage='''%prog [options] CORPUS
+extracts parts of a corpus in CoNLL (or other) format''')
 oparse.add_option('--fmt', dest='fmt',
+                  help='output format (default: conll)',
                   default='conll',
                   choices=['conll', 'line', 'bllip'])
 ## oparse.add_option('--encoding', dest='encoding',
 ##                  default=None)
 oparse.add_option('-P', dest='xcolumns',
+                  help='add an attribute to print out (with N=ATT for Nth column)',
                   default=[], action='append')
-oparse.add_option('-l', '--max-length', dest='max_len')
+oparse.add_option('-l', '--max-length', dest='max_len',
+                  help='do not print sentences longer than MAX_LEN')
 
 
 def main(argv=None):
     (opts, args) = oparse.parse_args(argv)
+    if not args:
+        oparse.print_help()
+        sys.exit(1)
     corpus_name = args[0]
     if len(args) == 3:
         sent_start = int(args[1])
