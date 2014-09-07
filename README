@@ -1,6 +1,9 @@
 This is a Python wrapper to the low-level API of CQP which allows
 you to access CQP corpora in the same way as Perl's CWB::CL
 
+cwb3-python is aimed at exposing all the nice new features of
+CWB 3.5 and later to users of either Python 2.7 or Python 3.3+.
+
 To install the module, please use the standard
  python setup.py build
  sudo python setup.py install

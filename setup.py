@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 from setuptools import setup, Extension
 
-# for CWB 2.2
-extra_libs = []
 # for CWB >= 3.0
-# extra_libs=['pcre','glib-2.0']
+extra_libs = ['pcre', 'glib-2.0']
 
 
 def read(fname):
@@ -13,7 +11,7 @@ def read(fname):
 setup(
     name='cwb-python',
     description='CQP and CL interfaces for Python',
-    author='Yannick Versley / Jorg Asmussen',
+    author='Yannick Versley / Jorg Asmussen / Stefan Evert',
     version='0.1b',
     ext_modules=[Extension('CWB.CL', ['src/CWB/CL.cpp'],
                            include_dirs=['src'],
