@@ -1,14 +1,11 @@
+from __future__ import print_function
+
 import sys
-import optparse
+import os
+import argparse
 from CWB.CL import Corpus
 
-try:
-    from pcfg_site_config import get_config_var
-    CQP_REGISTRY = get_config_var('pycwb.cqp_registry')
-except ImportError:
-    CQP_REGISTRY = None
-except KeyError:
-    CQP_REGISTRY = None
+CQP_REGISTRY = os.getenv('CORPUS_REGISTRY')
 
 __doc__ = '''
 this module is suitable for converting CQP corpora into
@@ -37,7 +34,7 @@ def output_sentences(sent_attr, attrs, sent_start=0, sent_end=None, f_out=None):
                         elif s == 'ROOT':
                             s = '0'
                     line.append(s)
-            print '\t'.join(line)
+            print('\t'.join(line))
         print
 
 
@@ -49,8 +46,7 @@ def output_sentences_line(sent_attr, attrs, sent_start=0, sent_end=None, f_out=N
     for sent_no in xrange(sent_start, sent_end):
         (off_start, off_end) = sent_attr[sent_no][:2]
         line = attrs[0][off_start:off_end + 1]
-        print >>f_out, ' '.join(line)
-
+        print (' '.join(line), file=f_out)
 
 def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
                            f_out=None, corpus_name='corpus', max_len=None):
@@ -63,36 +59,40 @@ def output_sentences_bllip(sent_attr, attrs, sent_start=0, sent_end=None,
         if max_len is not None and off_end - off_start >= max_len:
             continue
         line = attrs[0][off_start:off_end + 1]
-        print >>f_out, '<s %s_%d> %s </s>' % (corpus_name,
-                                              sent_no, ' '.join(line))
+        print('<s %s_%d> %s </s>' % (
+            corpus_name, sent_no, ' '.join(line)),
+            file=f_out)
 
-oparse = optparse.OptionParser(usage='''%prog [options] CORPUS
-extracts parts of a corpus in CoNLL (or other) format''')
-oparse.add_option('--fmt', dest='fmt',
-                  help='output format (default: conll)',
-                  default='conll',
-                  choices=['conll', 'line', 'bllip'])
+oparse = argparse.ArgumentParser(
+    description='''extracts parts of a corpus in CoNLL (or other) format''')
+oparse.add_argument('--fmt', dest='fmt',
+                    help='output format (default: conll)',
+                    default='conll',
+                    choices=['conll', 'line', 'bllip'])
 ## oparse.add_option('--encoding', dest='encoding',
 ##                  default=None)
-oparse.add_option('-P', dest='xcolumns',
-                  help='add an attribute to print out (with N=ATT for Nth column)',
-                  default=[], action='append')
-oparse.add_option('-l', '--max-length', dest='max_len',
-                  help='do not print sentences longer than MAX_LEN')
+oparse.add_argument('-P', dest='xcolumns',
+                    help='add an attribute to print out (with N=ATT for Nth column)',
+                    default=[], action='append')
+oparse.add_argument('-l', '--max-length', dest='max_len',
+                    help='do not print sentences longer than MAX_LEN')
+oparse.add_argument('CORPUS', dest='corpus',
+                    help='the CQP corpus to use')
+oparse.add_argument('start', dest='start', nargs='?', type='int',
+                    help='first position to extract')
+oparse.add_argument('end', dest='end', nargs='?', type='int',
+                    help='end of extracted range')
 
 
 def main(argv=None):
-    (opts, args) = oparse.parse_args(argv)
-    if not args:
-        oparse.print_help()
-        sys.exit(1)
-    corpus_name = args[0]
-    if len(args) == 3:
-        sent_start = int(args[1])
-        sent_end = int(args[2])
-    elif len(args) == 2:
+    args = oparse.parse_args(argv)
+    corpus_name = args.corpus
+    if args.end is not None:
+        sent_start = args.start
+        sent_end = args.end
+    elif args.start is not None:
         sent_start = 0
-        sent_end = int(args[1])
+        sent_end = args.start
     else:
         sent_start = 0
         sent_end = None
@@ -100,9 +100,9 @@ def main(argv=None):
     corpus = Corpus(corpus_name, registry_dir=CQP_REGISTRY)
     columns[0] = corpus.attribute('word', 'p')
     sent_attr = corpus.attribute('s', 's')
-    if opts.fmt == 'conll':
+    if args.fmt == 'conll':
         idx = 1
-        for col in opts.xcolumns:
+        for col in args.xcolumns:
             if '=' in col:
                 s_idx, att_name = col.split('=')
                 s_idx = int(s_idx)
@@ -112,11 +112,11 @@ def main(argv=None):
             columns[s_idx] = corpus.attribute(att_name, 'p')
             idx = s_idx + 1
         output_sentences(sent_attr, columns, sent_start, sent_end)
-    elif opts.fmt == 'line':
+    elif args.fmt == 'line':
         output_sentences_line(sent_attr, columns, sent_start, sent_end)
-    elif opts.fmt == 'bllip':
+    elif args.fmt == 'bllip':
         output_sentences_bllip(sent_attr, columns, sent_start, sent_end,
-                               corpus_name=corpus_name, max_len=opts.max_len)
+                               corpus_name=corpus_name, max_len=args.max_len)
 
 if __name__ == '__main__':
     main()
